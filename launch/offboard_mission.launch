@@ -1,0 +1,28 @@
+<launch>
+  <arg name="fcu_url" default="udp://:14540@127.0.0.1:14580"/>
+  <arg name="altitude" default="2.0"/>
+  <arg name="side_length" default="5.0"/>
+  <arg name="hover_seconds" default="5.0"/>
+  <arg name="start_mavros" default="true"/>
+
+  <include if="$(arg start_mavros)" file="$(find mavros)/launch/px4.launch">
+    <arg name="fcu_url" value="$(arg fcu_url)"/>
+  </include>
+
+  <node pkg="week3_offboard" type="offboard_mission.py"
+        name="offboard_mission" output="screen" required="true">
+    <param name="rate" value="20.0"/>
+    <param name="altitude" value="$(arg altitude)"/>
+    <param name="side_length" value="$(arg side_length)"/>
+    <param name="hover_seconds" value="$(arg hover_seconds)"/>
+    <param name="corner_hold_seconds" value="2.0"/>
+    <param name="position_tolerance" value="0.25"/>
+    <!-- Do not turn toward the next corner until the vehicle has nearly stopped. -->
+    <param name="speed_tolerance" value="0.20"/>
+    <param name="settle_seconds" value="0.50"/>
+    <!-- Must be larger than a commanded 5 m leg; otherwise corner_1 is
+         rejected immediately as a tracking error before the vehicle moves. -->
+    <param name="max_position_error" value="8.0"/>
+    <param name="waypoint_timeout" value="30.0"/>
+  </node>
+</launch>

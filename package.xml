@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>week3_offboard</name>
+  <version>0.1.0</version>
+  <description>Week 3 PX4 SITL and MAVROS Offboard flight practice.</description>
+
+  <maintainer email="15945371128@163.com">Guo ZiYu</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>mavros_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <exec_depend>mavros</exec_depend>
+  <exec_depend>rqt_graph</exec_depend>
+
+  <export/>
+</package>
