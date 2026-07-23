@@ -8,32 +8,135 @@
 
 任务航线：起飞到 2 m、悬停 5 s、飞行边长 5 m 的正方形、回到起点、自动降落，确认接地后解除武装。航点容差为 0.25 m。
 
-## 环境
+## 复现环境
 
-- Ubuntu 20.04
+推荐在 Ubuntu 20.04 宿主机直接运行，不要求 Docker。已验证的软件组合：
+
 - ROS Noetic
-- PX4-Autopilot v1.14.x，默认路径 `/root/PX4-Autopilot`
+- PX4-Autopilot v1.14.x
 - Gazebo Classic 11
 - MAVROS 1.20.x
+- Python 3
 
-首次安装 MAVROS 后需要安装 GeographicLib 数据：
+先确认基础环境可用：
 
 ```bash
+test -f /opt/ros/noetic/setup.bash
+test -f "$HOME/PX4-Autopilot/Makefile"
+gazebo --version
+source /opt/ros/noetic/setup.bash
+rospack find mavros
+```
+
+如果 MAVROS、rqt_graph 或 GeographicLib 数据尚未安装：
+
+```bash
+sudo apt update
+sudo apt install ros-noetic-mavros ros-noetic-mavros-extras \
+  ros-noetic-rqt-graph
 sudo /opt/ros/noetic/lib/mavros/install_geographiclib_datasets.sh
 ```
 
-## 编译
+以下步骤假设 PX4 位于 `~/PX4-Autopilot`，catkin 工作空间位于
+`~/catkin_ws`。如果路径不同，只需替换对应路径。
+
+## 宿主机从零复现（无需 Docker）
+
+### 1. 克隆并编译
 
 ```bash
-cd /root/catkin_ws
 source /opt/ros/noetic/setup.bash
-catkin_make
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src
+git clone https://github.com/GZY77-create/week3_offboard.git
+cd ~/catkin_ws
+catkin_make --pkg week3_offboard
 source devel/setup.bash
 ```
 
-## 一键运行
+### 2. 启动 PX4 SITL 和 Gazebo
 
-脚本必须在宿主机终端执行，不要进入容器后运行：
+打开终端 1：
+
+```bash
+cd ~/PX4-Autopilot
+make px4_sitl gazebo-classic_iris
+```
+
+等待 Gazebo 中出现 Iris，并等待 PX4 控制台显示 `Ready for takeoff!`。
+
+### 3. 启动 MAVROS
+
+打开终端 2：
+
+```bash
+source /opt/ros/noetic/setup.bash
+source ~/catkin_ws/devel/setup.bash
+roslaunch mavros px4.launch \
+  fcu_url:=udp://:14540@127.0.0.1:14580
+```
+
+确认出现 `Got HEARTBEAT, connected`。也可以新开终端检查：
+
+```bash
+source /opt/ros/noetic/setup.bash
+rostopic echo -n 1 /mavros/state
+```
+
+输出中的 `connected` 必须为 `True`。
+
+### 4. 执行正方形飞行任务
+
+打开终端 3：
+
+```bash
+source /opt/ros/noetic/setup.bash
+source ~/catkin_ws/devel/setup.bash
+roslaunch week3_offboard offboard_mission.launch start_mavros:=false
+```
+
+成功时日志依次包含：
+
+```text
+Reached takeoff
+Reached corner_1
+Reached corner_2
+Reached corner_3
+Reached corner_4
+Square complete
+Mission complete: landed and disarmed
+```
+
+飞行过程中不要关闭 PX4、Gazebo 或 MAVROS。需要中止时，在任务终端按
+`Ctrl+C`，节点会请求 `AUTO.LAND`。
+
+### 5. 验收检查与正常关闭
+
+可在额外终端运行：
+
+```bash
+source /opt/ros/noetic/setup.bash
+rostopic hz /mavros/setpoint_position/local
+rostopic echo /mavros/state
+rqt_graph
+```
+
+任务结束后确认 `armed: False`，再依次关闭任务终端、MAVROS，最后在 PX4
+控制台输入 `shutdown` 关闭 PX4 和 Gazebo。
+
+### 调整航线参数
+
+```bash
+roslaunch week3_offboard offboard_mission.launch \
+  start_mavros:=false \
+  altitude:=2.0 side_length:=2.0 hover_seconds:=5.0
+```
+
+## Docker 一键运行（可选）
+
+此方式仅适用于已经有名为 `ros-noetic` 的容器，且容器内已有
+`/root/PX4-Autopilot`、ROS Noetic、Gazebo 和 MAVROS 的电脑。脚本必须在
+宿主机终端执行：
 
 ```bash
 cd /path/to/catkin_ws/src/week3_offboard
@@ -41,45 +144,15 @@ xhost +si:localuser:root
 ./scripts/start_week3_host.sh
 ```
 
-将 `/path/to/catkin_ws` 替换为宿主机工作空间的实际路径。容器未运行时脚本会
-自动启动它；容器名不是 `ros-noetic` 时使用：
+将 `/path/to/catkin_ws` 替换为宿主机工作空间实际路径。容器未运行时脚本会
+自动启动；容器名不是 `ros-noetic` 时使用：
 
 ```bash
 ROS_CONTAINER=实际容器名 ./scripts/start_week3_host.sh
 ```
 
-脚本会自动启动 ROS Master、PX4 SITL + Gazebo、MAVROS、Offboard 任务、
-`rqt_graph` 和 `/mavros/state` 状态监视，并根据当前屏幕分辨率排列 5 个终端。
-
-## 手动运行
-
-终端 1 启动 PX4 SITL、Iris 和 Gazebo：
-
-```bash
-cd /root/PX4-Autopilot
-make px4_sitl gazebo-classic_iris
-```
-
-终端 2 一次启动 MAVROS 和 Offboard 节点：
-
-```bash
-source /opt/ros/noetic/setup.bash
-source /root/catkin_ws/devel/setup.bash
-roslaunch week3_offboard offboard_mission.launch
-```
-
-如果 MAVROS 已经运行，避免重复占用 UDP 端口：
-
-```bash
-roslaunch week3_offboard offboard_mission.launch start_mavros:=false
-```
-
-可调整航线：
-
-```bash
-roslaunch week3_offboard offboard_mission.launch \
-  altitude:=2.0 side_length:=2.0 hover_seconds:=5.0
-```
+脚本会启动 ROS Master、PX4 SITL + Gazebo、MAVROS、Offboard 任务、
+`rqt_graph` 和 `/mavros/state` 状态监视，并根据屏幕分辨率排列终端。
 
 ## 飞行流程
 
