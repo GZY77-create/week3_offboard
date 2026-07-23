@@ -106,6 +106,7 @@ PX4 SITL <--UDP/MAVLink--> /mavros <--ROS topics/services--> /offboard_mission
 ```
 
 | 名称 | 类型 | 方向 | 用途 |
+|---|---|---|---|
 | `/mavros/state` | `mavros_msgs/State` | MAVROS → 控制节点 | 获取连接、解锁和模式状态；未连接时禁止解锁。 |
 | `/mavros/local_position/pose` | `geometry_msgs/PoseStamped` | MAVROS → 控制节点 | 获取 ENU 本地位置，用于航点到达判定和误差保护。 |
 | `/mavros/extended_state` | `mavros_msgs/ExtendedState` | MAVROS → 控制节点 | 读取 `landed_state`，确认接地后才允许解除武装。 |
