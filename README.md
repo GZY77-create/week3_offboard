@@ -228,9 +228,11 @@ rqt_graph
 
 ## 验收录屏
 
-- 文件：`第三周软件组任务录屏.mp4`
+- 文件：[`videos/week3_task1_demo.mp4`](videos/week3_task1_demo.mp4)
 - 时长：2 分 03 秒
 - 分辨率：2560 × 1600，30 FPS
+
+[▶ 查看或下载完整验收录屏](videos/week3_task1_demo.mp4)
 
 录屏包含 Gazebo 中的完整起飞、悬停、正方形航线、返航和降落过程；终端最终
 显示 `Mission complete: landed and disarmed`，`/mavros/state` 显示
