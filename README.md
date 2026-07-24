@@ -330,3 +330,25 @@ rqt_graph
 显示 `Mission complete: landed and disarmed`，`/mavros/state` 显示
 `connected: True`、`armed: False`，并展示 `rqt_graph` 中
 `/offboard_mission` 与 `/mavros` 的通信关系。
+
+## 全新 Ubuntu 20.04 验收标准
+
+每次复现前先确认没有旧的仿真进程：
+
+```bash
+pgrep -af 'px4|gzserver|gzclient|mavros' || true
+```
+
+若存在上一次运行的进程，先正常关闭对应终端后再开始。按上文三个终端的顺序
+启动；不要同时运行 `start_mavros:=true` 和手工启动 MAVROS。验收必须同时满足：
+
+```text
+connected: True
+Reached corner_1
+Reached corner_2
+Reached corner_3
+Reached corner_4
+Mission complete: landed and disarmed
+```
+
+若没有最后一行，任务不算复现成功，即使 Gazebo 窗口已经打开也不算成功。
