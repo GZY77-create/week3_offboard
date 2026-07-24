@@ -4,6 +4,25 @@
 
 ![任务一验收总览：Gazebo、任务完成状态与 rqt_graph](images/task1_acceptance_overview.png)
 
+## 项目结构
+
+```text
+week3_offboard/
+├── CMakeLists.txt                    # catkin 构建配置及脚本、launch 安装规则
+├── package.xml                       # ROS 包信息和 geometry_msgs、MAVROS 等依赖
+├── README.md                         # 环境安装、启动步骤、通信关系和问题说明
+├── .gitignore                        # Git 忽略规则
+├── launch/
+│   └── offboard_mission.launch       # 配置高度、边长等参数并启动 MAVROS 和任务节点
+├── scripts/
+│   ├── offboard_mission.py           # OFFBOARD 起飞、正方形航线、降落和安全保护
+│   └── start_week3_host.sh           # 从宿主机启动并排列 Docker 内各任务终端
+├── images/
+│   └── task1_acceptance_overview.png # Gazebo、完成日志和 rqt_graph 总览图
+└── videos/
+    └── week3_task1_demo.mp4          # 起飞、正方形飞行、返航和降落完整录屏
+```
+
 ## 实操结果
 
 任务航线：起飞到 2 m、悬停 5 s、飞行边长 5 m 的正方形、回到起点、自动降落，确认接地后解除武装。航点容差为 0.25 m。
